@@ -26,11 +26,56 @@ import urllib.request
 class BiliTranscriber:
     """B站视频转录器"""
 
+    # 常见安装路径（应对受限PATH环境）
+    COMMON_PATHS = [
+        "/usr/local/bin",
+        "/opt/homebrew/bin",
+        "/usr/bin",
+        "/bin",
+        str(Path.home() / "bin"),
+        str(Path.home() / ".local" / "bin"),
+    ]
+
     def __init__(self, output_dir: str = "./output"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
         self.temp_dir = Path(tempfile.gettempdir()) / "bili_transcribe"
         self.temp_dir.mkdir(exist_ok=True)
+        # 缓存找到的可执行文件路径
+        self._cmd_cache = {}
+
+    def find_executable(self, cmd: str) -> Optional[str]:
+        """查找可执行文件（优先缓存，支持受限PATH环境）"""
+        if cmd in self._cmd_cache:
+            return self._cmd_cache[cmd]
+
+        # 1. 先尝试 shutil.which（标准PATH查找）
+        import shutil
+        result = shutil.which(cmd)
+        if result:
+            self._cmd_cache[cmd] = result
+            return result
+
+        # 2. 在常见路径中搜索（应对受限PATH）
+        for path in self.COMMON_PATHS:
+            full_path = Path(path) / cmd
+            if full_path.exists() and os.access(full_path, os.X_OK):
+                self._cmd_cache[cmd] = str(full_path)
+                return str(full_path)
+
+            # Windows: 尝试 .exe 后缀
+            full_path_exe = Path(path) / f"{cmd}.exe"
+            if full_path_exe.exists():
+                self._cmd_cache[cmd] = str(full_path_exe)
+                return str(full_path_exe)
+
+        self._cmd_cache[cmd] = None
+        return None
+
+    def get_cmd(self, cmd: str) -> str:
+        """获取命令的绝对路径，找不到则返回原命令（让系统报错）"""
+        path = self.find_executable(cmd)
+        return path if path else cmd
 
     def extract_bvid(self, url: str) -> str:
         """从URL中提取BV号"""
@@ -57,11 +102,7 @@ class BiliTranscriber:
 
     def check_dependency(self, cmd: str) -> bool:
         """检查依赖是否存在"""
-        try:
-            subprocess.run([cmd, "--version"], capture_output=True, check=True)
-            return True
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            return False
+        return self.find_executable(cmd) is not None
 
     def check_dependencies(self) -> Dict[str, bool]:
         """检查所有依赖"""
@@ -90,9 +131,9 @@ class BiliTranscriber:
         print(f"\n📥 正在下载视频 {bvid}...")
         output_path = self.temp_dir / f"{output_name}.mp4"
 
-        # 使用BBDown下载
+        # 使用BBDown下载（使用绝对路径，避免PATH受限问题）
         cmd = [
-            "BBDown",
+            self.get_cmd("BBDown"),
             "--work-dir", str(self.temp_dir),
             "--file-pattern", output_name,
             bvid
@@ -122,7 +163,7 @@ class BiliTranscriber:
         audio_path = self.temp_dir / f"{output_name}.mp3"
 
         cmd = [
-            "ffmpeg",
+            self.get_cmd("ffmpeg"),
             "-i", str(video_path),
             "-vn",
             "-acodec", "libmp3lame",
