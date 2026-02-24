@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 
-def main(url: str, model: str = "small"):
+def main(url: str, model: str = "small", summarize: bool = False):
     """Skill入口函数"""
 
     # 获取skill所在目录
@@ -28,7 +28,14 @@ def main(url: str, model: str = "small"):
         "--output-dir", "./output"
     ]
 
-    print(f"🎬 开始转录: {url}")
+    # 如果是总结模式，添加 --summarize 参数
+    if summarize:
+        cmd.append("--summarize")
+
+    if summarize:
+        print(f"🎬 开始转录并总结: {url}")
+    else:
+        print(f"🎬 开始转录: {url}")
     print(f"🤖 使用模型: {model}")
     print()
 
@@ -49,5 +56,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("url")
     parser.add_argument("--model", default="small")
+    parser.add_argument("--summarize", action="store_true", help="启用总结模式")
     args = parser.parse_args()
-    sys.exit(main(args.url, args.model))
+    sys.exit(main(args.url, args.model, args.summarize))

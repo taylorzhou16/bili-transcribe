@@ -286,7 +286,7 @@ class BiliTranscriber:
         print("✅ 清理完成")
 
     def process(self, url: str, model: str = "medium", language: str = "zh",
-                keep_video: bool = False, skip_download: bool = False):
+                keep_video: bool = False, skip_download: bool = False, summarize: bool = False):
         """主处理流程"""
 
         # 1. 提取BV号
@@ -334,6 +334,23 @@ class BiliTranscriber:
             for file_type, file_path in output_files.items():
                 print(f"  - {file_type.upper()}: {file_path.name}")
 
+            # 9. 如果启用了总结模式，输出文本内容
+            if summarize:
+                txt_path = output_files.get("txt")
+                if txt_path and txt_path.exists():
+                    print(f"\n" + "="*60)
+                    print("📄 转录文本内容（用于AI总结）：")
+                    print("="*60 + "\n")
+                    with open(txt_path, "r", encoding="utf-8") as f:
+                        content = f.read()
+                        # 限制输出长度，避免太长
+                        if len(content) > 10000:
+                            print(content[:10000])
+                            print(f"\n... （文本过长，已截断，完整内容见文件：{txt_path}）")
+                        else:
+                            print(content)
+                    print("\n" + "="*60)
+
             return output_files
 
         except Exception as e:
@@ -377,6 +394,9 @@ def main():
     parser.add_argument("--skip-download", action="store_true",
                         help="跳过下载步骤(使用已有视频)")
 
+    parser.add_argument("--summarize", action="store_true",
+                        help="生成转录后输出文本内容（用于AI总结）")
+
     args = parser.parse_args()
 
     # 创建转录器实例
@@ -388,7 +408,8 @@ def main():
         model=args.model,
         language=args.language,
         keep_video=args.keep_video,
-        skip_download=args.skip_download
+        skip_download=args.skip_download,
+        summarize=args.summarize
     )
 
 
