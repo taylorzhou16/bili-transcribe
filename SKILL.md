@@ -11,14 +11,9 @@ argument-hint: <B站视频URL或BV号> [--model <模型>]
 ## 执行步骤
 
 ### 步骤 1：运行转录脚本
-使用 Task 工具执行（推荐，支持后台运行）：
+使用 Bash 工具执行：
 ```bash
-python3 ~/.claude/skills/bili-transcribe/bili_transcribe.py "$ARGUMENTS" --task-mode
-```
-
-或使用 Bash 工具在前台执行：
-```bash
-python3 ~/.claude/skills/bili-transcribe/bili_transcribe.py "$ARGUMENTS"
+python3 ~/.claude/skills/bili_transcribe/bili_transcribe.py "$ARGUMENTS"
 ```
 
 ### 步骤 2：读取结果文件
@@ -37,9 +32,8 @@ python3 ~/.claude/skills/bili-transcribe/bili_transcribe.py "$ARGUMENTS"
 
 ## 注意事项
 
-- **推荐使用 Task 工具执行**，支持后台运行和进度追踪
+- **使用 Bash 工具执行**，不要使用 Task 工具
 - **输出目录**：`~/bili-transcribe-output/`（绝对路径，确保任意工作目录下都能找到）
-- **Task 模式**：添加 `--task-mode` 参数启用 JSON 状态输出，方便后台任务追踪
 - 不要尝试用其他方式获取视频信息（如 curl API）
 - 不要尝试自己下载或转录，脚本已经包含了完整的处理逻辑
 - 如果脚本报告缺少依赖（BBDown/ffmpeg/whisper），提示用户安装
