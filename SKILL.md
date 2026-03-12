@@ -18,7 +18,7 @@ argument-hint: <B站视频URL或BV号> [--model <模型>]
 
 ```json
 {
-  "command": "python3 ~/.claude/skills/bili_transcribe/bili_transcribe.py \"$ARGUMENTS\" --task-mode",
+  "command": "python3 ~/.claude/skills/bili-transcribe/bili-transcribe.py \"$ARGUMENTS\" --task-mode",
   "description": "转录B站视频"
 }
 ```
