@@ -1,5 +1,5 @@
 ---
-name: bili_transcribe
+name: bili-transcribe
 description: 转录B站视频为文字。下载B站视频，提取音频，使用Whisper生成逐字稿。
 argument-hint: <B站视频URL或BV号> [--model <模型>]
 ---
